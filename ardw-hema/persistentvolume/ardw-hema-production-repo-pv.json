@@ -1,0 +1,25 @@
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolume",
+  "metadata": {
+    "name": "ardw-hema-production-repo-pv"
+  },
+  "spec": {
+    "capacity": {
+      "storage": "10Gi"
+    },
+    "accessModes": [
+      "ReadWriteMany"
+    ],
+    "nfs": {
+      "path": "/APP_BOOKING/ARDW_HEMA",
+      "server": "mucsvm04.msp.amadeus.net"
+    },
+    "persistentVolumeReclaimPolicy": "Retain",
+    "claimRef": {
+      "kind": "PersistentVolumeClaim",
+      "namespace": "ardw-hema",
+      "name": "ardw-hema-production-repo-pvc"
+    }
+  }
+}

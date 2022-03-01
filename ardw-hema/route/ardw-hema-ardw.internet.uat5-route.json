@@ -1,0 +1,24 @@
+{
+    "kind": "Route",
+    "apiVersion": "v1",
+    "id": "ardw.internet.uat5-route",
+    "metadata": {
+        "name": "ardw.internet.uat5-route",
+        "annotations": {
+            "description": "Route for application's http service.",
+            "haproxy.router.openshift.io/timeout" : "300s"
+        }
+    },
+    "spec": {
+        "host": "uat5.resdesktop.altea.amadeus.com",  
+        "to": {
+            "kind": "Service",
+            "name": "acs-ard-service-ardw-hema"
+        },
+        "tls": {
+            "termination": "edge",
+            "insecureEdgeTerminationPolicy": "Allow"
+          },
+          "wildcardPolicy": "None"
+        }
+}

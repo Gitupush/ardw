@@ -1,0 +1,24 @@
+{
+    "kind": "Route",
+    "apiVersion": "v1",
+    "id": "ardw-hema-muc5.ardw.internal-route",
+    "metadata": {
+        "name": "hema-ardw.internal-route",
+        "annotations": {
+            "description": "Route for application's http service.",
+            "haproxy.router.openshift.io/timeout" : "300s"
+        }
+    },
+    "spec": {
+        "host": "acs-ard-service-ardw-hema.muc5.paas.amadeus.net",  
+        "to": {
+            "kind": "Service",
+            "name": "acs-ard-service-ardw-hema"
+        },
+        "tls": {
+            "termination": "edge",
+            "insecureEdgeTerminationPolicy": "Allow"
+          },
+          "wildcardPolicy": "None"
+        }
+}

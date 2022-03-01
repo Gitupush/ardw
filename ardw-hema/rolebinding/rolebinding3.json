@@ -1,0 +1,19 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "rcs role",
+    "namespace": "ardw-hema"
+  },
+
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "rcs",
+	  "namespace": "ardw-hema"
+    }
+  ],
+  "roleRef": {
+    "name": "edit"
+  }
+}

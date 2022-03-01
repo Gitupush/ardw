@@ -1,0 +1,48 @@
+apiVersion: v1
+data:
+  filebeat-exception.yml: |-
+    - type: log
+      paths:
+        - /logs/acs-ard/ard-main/server.log
+        - /logs/acs-ard/ard-main/system/server.log
+      scan_frequency: 1s
+      multiline:
+        pattern:  '[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} '
+        negate: true
+        match: after
+      include_lines: ['[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} ERROR']
+      tags: ["server"]
+      
+  filebeat-statistic.yml: |-
+    - type: log
+      paths:
+        - /logs/acs-ard/ard-main/statistic/statistic.log
+      scan_frequency: 1s
+      tags: ["statistic"]
+      
+  filebeat.yml: |-
+    filebeat.prospectors:
+    - input_type: log
+      paths:
+        - /logs/acs-ard/ard-main/server.log
+      multiline:
+        pattern:  '^[0-9]{4}\/[0-9]{2}\/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}'
+        negate: true
+        match: after
+      include_lines: ['^[0-9]{4}\/[0-9]{2}\/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6} ERROR']
+      tags: ["server"]
+    - input_type: log
+      paths:
+        - /logs/acs-ard/ard-main/statistic/statistic.log
+      tags: ["statistic"]
+
+    output.logstash:
+      hosts: ["${TARGET_LOGSTASH_HOST}:${TARGET_LOGSTASH_PORT}"]
+      ssl.enabled: false
+      
+kind: ConfigMap
+metadata:
+  labels:
+    acs-component: acs-ard
+  name: filebeat-config-v1
+  namespace: ardw-hema

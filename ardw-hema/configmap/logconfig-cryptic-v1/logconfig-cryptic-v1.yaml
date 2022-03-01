@@ -1,0 +1,29 @@
+apiVersion: v1
+data:
+  jcp.traceconf: >-
+    ## This file is used by JCPJTracerAppender and logstash-jtracer container
+
+    ## and the syntax must therefore comply to both parsing libraries used
+
+
+    # Default QUEUE_SIZE=1000
+    https://rndwww.nce.amadeus.net/confluence/display/LOG/JTracer+Configuration+Syntax
+
+    QUEUE_SIZE 65536
+
+
+    ## Filters section
+
+    FILTER ALL = *:*
+
+    # Log server section
+
+    LOGSERVER HOST=logserver-alf-uat-new.ardw-infra PORT=8856 PROTOCOL=tcp
+    FILTER=ALL INDEXED=yes
+  logstash.conf: "# JCPCRYPTIC-APP log files Test\n\ninput {\n\n\t# Add server.log file\n\tfile {\n\t\ttype => \"appserver\"\n\t\tpath => [ \"/logs/${ACS_COMPONENT}/ard-cryptic-domain/server.log\" ]\n\t\tsincedb_path  => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ard-cryptic-domain_serverlog\"\n\t\tstart_position => \"beginning\"\n                codec => multiline {\n                pattern => \"     id='| at |Caused by:|\\t...|]\\):\"\n                what => \"previous\"\n                }\n\t}\n\t  \n\t  \n\t# Add gc.log files\n\tfile {\n\t\ttype => \"appserver-gc\"\n\t\tpath => [ \"/logs/${ACS_COMPONENT}/ard-cryptic-domain/gc.log*\" ]\n\t\tsincedb_path  => \"/logs/${ACS_COMPONENT}.logstash_sincedb_ard-cryptic-domain_gc\"\n\t\tstart_position => \"beginning\"\n\t}\n\t  \n\t\n\t# Add apache errors.log file\n\tfile {\n\t\ttype => \"error\"\n\t\tpath => [ \"/logs/${ACS_COMPONENT}/ard-cryptic-webserver/error.log\" ]\n\t\tsincedb_path  => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ard-cryptic-webserver_errorlog\"\n\t\tstart_position => \"beginning\"\n\t}\n\t\n\t# Add apache access.log file\n\tfile {\n\t\ttype => \"access\"\n\t\tpath => [ \"/logs/${ACS_COMPONENT}/ard-cryptic-webserver/access.log\" ]\n\t\tsincedb_path  => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ard-cryptic-webserver_accesslog\"\n\t\tstart_position => \"beginning\"\n\t}\n        \n        \n        file      {\n                path => [ \"/logs/${ACS_COMPONENT}/ard-cryptic-domain/refresh-cache.log*\" ]\n                start_position => \"beginning\"\n                sincedb_path => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ard-cryptic-domain_refresh-cache\"\n                type => \"refresh-cache\"\n  }\n\n\n}\n\nfilter {\n   grok {\n      # retrieve log file name\n      match => [\"path\",\"%{GREEDYDATA}/%{GREEDYDATA:filename}\\.*\"]\n      # retrieve docker image name out of path\n      match => [\"path\",\"/%{GREEDYDATA}/%{GREEDYDATA}/%{GREEDYDATA:docker_image}/%{GREEDYDATA}\"]\n      break_on_match => false\n  }\n}\n\n# If the Openshift service \"logserver\" is available LOGSERVER_HOST and LOGSERVER_PORT will be using the OS var coming from the service\n# otherwise a hard coded value 0.0.0.0:8856 will be used\n# here the logic https://rndwww.nce.amadeus.net/git/projects/UHA/repos/images_mnr/browse/docker/logstash-jtracer/init.sh?at=refs%2Ftags%2F2.0.0#45-46\n# below we are using a fix server host/port which allows us to deploy the application component before the service removing a dependency\n# we know beforehand that we either use the logserver service from tinylogserver or the one from https://rndwww.nce.amadeus.net/git/projects/AEKACS/repos/acs-external-services/browse\n# The hostrace input has been trunck of <Trace> , wee need to add it again to have an valid xml\n\noutput {\n if [type] == \"access\" {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-JSID-apache-access-log\"\n    }\n  }\n  else if [type] == \"error\" {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-apache-error-log\"\n    }\n  }\n  else if [type] == \"appserver\" {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-JSID-jboss-server-log\"\n    }\n  }\n  else if [type] == \"appserver-gc\" {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-jboss-server-gc-log-${HOSTNAME}\"\n    }\n  }\n  else  if [type] == \"refresh-cache\" {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-refresh-cache\"\n    }\n  }\n  else {\n    jtracer {\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-other\"\n    }\n  }\n}"
+kind: ConfigMap
+metadata:
+  labels:
+    acs-component: acs-ard-cryptic
+  name: logconfig-cryptic-v1
+  namespace: ardw-hema

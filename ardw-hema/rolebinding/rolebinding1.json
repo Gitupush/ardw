@@ -1,0 +1,23 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "fea-rolebinding",
+    "namespace": "ardw-hema"
+  },
+  "userNames": [
+    "ppmetri"
+  ],
+  "groupNames": [
+    "ieaAdmins"
+  ],
+  "subjects": [
+    {
+      "kind": "Group",
+      "name": "ieaAdmins"
+    }
+  ],
+  "roleRef": {
+    "name": "admin"
+  }
+}

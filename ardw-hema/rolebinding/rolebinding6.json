@@ -1,0 +1,18 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "fea-automation role",
+    "namespace": "ardw-hema"
+  },
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "fea-automation",
+      "namespace": "ardw-infra"
+    }
+  ],
+  "roleRef": {
+    "name": "view"
+  }
+}

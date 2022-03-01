@@ -1,0 +1,14 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "cd-rolebinding",
+    "namespace": "ardw-hema"
+  },
+  "userNames": [
+    "system:serviceaccount:ardw1-admin:cd"
+  ],
+  "roleRef": {
+    "name": "admin"
+  }
+}

@@ -1,0 +1,28 @@
+apiVersion: v1
+data:
+  jcp.traceconf: >-
+    ## This file is used by JCPJTracerAppender and logstash-jtracer container
+
+    ## and the syntax must therefore comply to both parsing libraries used
+
+
+    # Default QUEUE_SIZE=1000
+    https://rndwww.nce.amadeus.net/confluence/display/LOG/JTracer+Configuration+Syntax
+
+    GLOBAL QUEUE_SIZE 65536
+
+
+    ## Filters section
+
+    FILTER ALL = *:*
+
+    # Log server section
+
+    LOGSERVER_SERVICE NAME=log-fwd-tracer-ardw.ardw-logging.svc.cluster.local PORT=12800 FILTER=ALL
+  logstash.conf: "# Sitemanager UI log files Test\r\n\r\ninput {\r\n\r\n  # image ardw-sitemanager-webserver will produce the following files\r\n  file {\r\n    path => [ \"/logs/${ACS_COMPONENT}/webserver/access.log-*\" ]\r\n    start_position => \"beginning\"\r\n    sincedb_path => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ardw-sitemanager-webserver_accesslog\"\r\n    type => \"access\"\r\n  }\r\n\r\n  file {\r\n    path => [ \"/logs/${ACS_COMPONENT}/webserver/error.log-*\" ]\r\n    start_position => \"beginning\"\r\n    sincedb_path => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ardw-sitemanager-webserver_errorlog\"\r\n    type => \"error\"\r\n  }\r\n\r\n  # image ardw-sitemanager will produce the following files\r\n  file {\r\n    path => [ \"/logs/${ACS_COMPONENT}/ardw-sitemanager/gc.log*\" ]\r\n    start_position => \"beginning\"\r\n    sincedb_path => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ardw-sitemanager_gc\"\r\n    type => \"appserver-gc\"\r\n  }\r\n\r\n  file {\r\n    path => [ \"/logs/${ACS_COMPONENT}/ardw-sitemanager/refresh-cache.log*\" ]\r\n    start_position => \"beginning\"\r\n    sincedb_path => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ardw-sitemanager_refresh-cache\"\r\n    type => \"refresh-cache\"\r\n  }\r\n\r\n  file {\r\n    path => [ \"/logs/${ACS_COMPONENT}/ardw/server.log\" ]\r\n    sincedb_path  => \"/logs/${ACS_COMPONENT}/.logstash_sincedb_ardw-sitemanager_serverlog\"\r\n    start_position => \"beginning\"  \r\n    codec => multiline {\r\n      pattern => \"     id='| at |Caused by:|\\t...|]\\):\"\r\n      what => \"previous\"\r\n    }\r\n    type => \"appserver\"\r\n  }\r\n}\r\n\r\nfilter {\r\n  grok {\r\n    # retrieve log file name\r\n    match => [\"path\",\"%{GREEDYDATA}/%{GREEDYDATA:filename}\\.*\"]\r\n    # retrieve docker image name out of path\r\n    match => [\"path\",\"/%{GREEDYDATA}/%{GREEDYDATA}/%{GREEDYDATA:docker_image}/%{GREEDYDATA}\"]\r\n    break_on_match => false\r\n  }\r\n}\r\n\r\n# If the Openshift service \"logserver\" is available LOGSERVER_HOST and LOGSERVER_PORT will be using the OS var coming from the service\r\n# otherwise a hard coded value 0.0.0.0:8856 will be used\r\n# here the logic https://rndwww.nce.amadeus.net/git/projects/UHA/repos/images_mnr/browse/docker/logstash-jtracer/init.sh?at=refs%2Ftags%2F2.0.0#45-46 \r\n# below we are using a fix server host/port which allows us to deploy the application component before the service removing a dependency\r\n# we know beforehand that we either use the logserver service from tinylogserver or the one from https://rndwww.nce.amadeus.net/git/projects/ARDWDEVOPS/repos/acs-external-services/browse \r\n\r\noutput {\r\n if [type] == \"access\" {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-JSID-apache-access-log\"\r\n    }\r\n  }\r\n  else if [type] == \"error\" {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-apache-error-log\"\r\n    }\r\n  }\r\n  else if [type] == \"appserver\" {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-JSID-jboss-server-log\"\r\n    }\r\n  }\r\n  else if [type] == \"appserver-gc\" {\r\n    jtracer {\r\n     codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-jboss-server-gc-log-${HOSTNAME}\"\r\n    }\r\n  }\r\n  else  if [type] == \"refresh-cache\" {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-refresh-cache\"\r\n    }\r\n  }\r\n  else if [type] == \"output-txt\" {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-output-txt\"\r\n    }\r\n  }\r\n  else {\r\n    jtracer {\r\n      codec => plain {format => \"${NAMESPACE} ${HOSTNAME} ${ACS_COMPONENT} ${ACS_COMPONENT_VERSION} %{docker_image} %{filename} %{message}\"}\r\n      tracer_conf_file => \"${JCP_JTRACER_CONF_PATH}\"\r\n      filename => \"${NAMESPACE}-${ACS_COMPONENT}-TECH-other\"\r\n    }\r\n  }\r\n}"
+kind: ConfigMap
+metadata:
+  labels:
+    acs-component: ardw-sitemanager
+  name: logconfig-sm-v1
+  namespace: ardw-hema

@@ -1,0 +1,20 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "ardw-team",
+    "namespace": "ardw-hema"
+  },
+  "groupNames": [
+    "ARDReleaseImplementation"
+  ],
+  "subjects": [
+    {
+      "kind": "Group",
+      "name": "ARDReleaseImplementation"
+    }
+  ],
+  "roleRef": {
+    "name": "view"
+  }
+}

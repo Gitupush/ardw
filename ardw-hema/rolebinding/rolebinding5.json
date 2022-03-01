@@ -1,0 +1,19 @@
+{
+  "kind": "RoleBinding",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "ardw-jenkins role",
+    "namespace": "ardw-hema"
+  },
+
+  "subjects": [
+    {
+      "kind": "ServiceAccount",
+      "name": "ardw-jenkins",
+	  "namespace": "ardw-jenkins"
+    }
+  ],
+  "roleRef": {
+    "name": "edit"
+  }
+}

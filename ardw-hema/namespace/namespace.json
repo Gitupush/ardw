@@ -1,0 +1,31 @@
+{
+  "kind": "namespace",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "ardw-hema",
+    "labels": {
+      "paas.amadeus.net/quota": "ardw1",
+      "internal.acs.amadeus.com/environment": "UAT",
+      "internal.acs.amadeus.com/router": "router2",
+      "internal.acs.amadeus.com/component": "ard-praxis",
+      "app.kubernetes.io/part-of": "ARDW",
+      "app.kubernetes.io/instance": "test",
+      "acs.amadeus.com/state": "active",
+      "acs.amadeus.com/phase": "UAT",
+      "rcsAsAService": "enabled",
+	  "acs.amadeus.com/securityZone" : "cde"
+    },
+    "annotations": {
+      "paas.amadeus.net/winaproachgroup": "OEP03TOP",
+      "paas.amadeus.net/chorus-path": "TPE-SRE-DIS-ECO-FEA",
+      "paas.amadeus.net/project": "PRAXIS ARDW : ARDW HEMA namespace",
+      "paas.amadeus.net/paas-info": "true"
+    }
+  },
+  "spec": {
+    "finalizers": [
+      "openshift.io/origin",
+      "kubernetes"
+    ]
+  }
+}
